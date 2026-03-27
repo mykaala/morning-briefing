@@ -163,8 +163,8 @@ export default function LandingPage({ demoBriefing }: Props) {
 							textTransform: 'lowercase'
 						}}
 					>
-						a personal daily briefing assistant — with news, weather, calendar, tasks, and prayer times. you&apos;re
-						welcome to look around though.
+						a personal daily briefing assistant — packed with news, weather, calendar, tasks, and prayer times.
+						you&apos;re welcome to look around though.
 					</p>
 
 					{/* Divider */}
