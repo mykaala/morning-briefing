@@ -105,6 +105,9 @@ const DEMO_BRIEFING: Briefing = {
 
 /* ─── Page (server component) ────────────────────────────── */
 
+// Explicitly Node.js runtime — prevents bundler from treating this as Edge
+export const runtime = "nodejs";
+
 export default async function Home() {
   const headersList = await headers();
   const isDemo = headersList.get("x-demo-mode") === "true";
