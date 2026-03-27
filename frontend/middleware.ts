@@ -9,9 +9,8 @@ export function middleware(request: NextRequest) {
 
   const response = NextResponse.next();
 
-  if (!isValid) {
-    response.headers.set("x-demo-mode", "true");
-  }
+  // Set demo mode header: "true" if unauthenticated, "false" if valid token
+  response.headers.set("x-demo-mode", isValid ? "false" : "true");
 
   return response;
 }
