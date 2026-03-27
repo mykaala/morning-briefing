@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
+import { protectAllah } from "@/lib/protectAllah";
 
 const ease: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
@@ -57,7 +58,7 @@ export default function QuranVerse({ quran, Card, Eyebrow, Ghost }: Props) {
           textTransform: "lowercase",
         }}
       >
-        &ldquo;{quran.translation}&rdquo;
+        &ldquo;{protectAllah(quran.translation)}&rdquo;
       </p>
 
       {/* Reference */}

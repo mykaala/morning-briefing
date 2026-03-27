@@ -1,5 +1,7 @@
 "use client";
 
+import { protectAllah } from "@/lib/protectAllah";
+
 interface Props {
   focus: string;
   Card: React.ComponentType<{ children: React.ReactNode; style?: React.CSSProperties }>;
@@ -25,7 +27,7 @@ export default function Focus({ focus, Card, Eyebrow, Ghost }: Props) {
           textTransform: "lowercase",
         }}
       >
-        &ldquo;{focus}&rdquo;
+        &ldquo;{protectAllah(focus)}&rdquo;
       </p>
     </Card>
   );

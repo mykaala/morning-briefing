@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
+import { protectAllah } from "@/lib/protectAllah";
 
 const ease: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
@@ -55,7 +56,7 @@ export default function Tasks({ tasks, Card, Eyebrow, Ghost }: Props) {
                 textTransform: "lowercase",
               }}
             >
-              {tasks.focus_task.title}
+              {protectAllah(tasks.focus_task.title)}
             </p>
             <p
               style={{
@@ -68,7 +69,7 @@ export default function Tasks({ tasks, Card, Eyebrow, Ghost }: Props) {
                 textTransform: "lowercase",
               }}
             >
-              {tasks.focus_reason}
+              {protectAllah(tasks.focus_reason)}
             </p>
           </div>
         ) : (
