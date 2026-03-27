@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 
 const ease: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
@@ -103,10 +103,15 @@ export default function Calendar({
   Eyebrow,
   Ghost,
 }: Props) {
-  const now = useMemo(() => {
+  const [now, setNow] = useState<number | null>(null);
+
+  useEffect(() => {
     const d = new Date();
-    return d.getHours() * 60 + d.getMinutes();
+    setNow(d.getHours() * 60 + d.getMinutes());
   }, []);
+
+  // Use -Infinity before hydration so nothing renders as "past" on the server
+  const nowMin = now ?? -Infinity;
 
   const timedEvents = calendar.events.filter(
     (e) => !e.is_all_day && e.start_time
@@ -127,14 +132,14 @@ export default function Calendar({
 
   /* Find the next upcoming event (not prayer) */
   const nextEventIdx = schedule.findIndex(
-    (item) => item.kind === "event" && item.sortMin >= now
+    (item) => item.kind === "event" && item.sortMin >= nowMin
   );
 
   /* Find where "now" sits in the schedule for the now-indicator */
   let nowInsertIdx = -1;
   if (schedule.length > 0) {
     for (let i = 0; i < schedule.length; i++) {
-      if (schedule[i].sortMin > now) {
+      if (schedule[i].sortMin > nowMin) {
         if (i > 0) nowInsertIdx = i;
         break;
       }
@@ -293,7 +298,7 @@ export default function Calendar({
 
             {/* Schedule items */}
             {schedule.map((item, i) => {
-              const isPast = item.sortMin < now;
+              const isPast = item.sortMin < nowMin;
               const isNext =
                 item.kind === "event" && i === nextEventIdx;
 
