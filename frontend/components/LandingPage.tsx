@@ -37,12 +37,12 @@ const GRADIENT_VARIANTS = [
    #6aad7a`
 ];
 
-function getWeeklyGradientIndex(): number {
-	const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
-	const startOfYear = new Date(now.getFullYear(), 0, 1);
-	const weekNum = Math.floor((now.getTime() - startOfYear.getTime()) / (7 * 86_400_000));
-	return weekNum % GRADIENT_VARIANTS.length;
-}
+// function getWeeklyGradientIndex(): number {
+// 	const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+// 	const startOfYear = new Date(now.getFullYear(), 0, 1);
+// 	const weekNum = Math.floor((now.getTime() - startOfYear.getTime()) / (7 * 86_400_000));
+// 	return weekNum % GRADIENT_VARIANTS.length;
+// }
 
 /* ─── Props ──────────────────────────────────────────────── */
 
@@ -107,6 +107,7 @@ export default function LandingPage({ demoBriefing }: Props) {
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
 				style={{ width: '100%', maxWidth: 720 }}
+				suppressHydrationWarning
 			>
 				{/* Card */}
 				<div
