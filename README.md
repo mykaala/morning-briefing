@@ -1,6 +1,12 @@
-# morning-briefing
+# morning-briefing ☀️
 
-my personal morning dashboard, built so i don't have to think before coffee. every day it pulls my calendar, to-do list, weather, news, prayer times, and a quran verse — throws it all at GPT-4o Mini — and spits out one clean JSON file. open a tab, get your day. that's it.
+my personal morning dashboard, built so i don't have to think before coffee. every day it pulls my calendar, to-do list, weather, news, prayer times, and a quran verse — throws it all at GPT-4o Mini — and spits out one clean JSON file. 
+
+i didn’t want 5 apps in the morning.  
+i wanted one screen that tells me everything i need.
+i hope to extend this project into a second brain.
+
+feel free to play around with the demo. :)
 
 ---
 
@@ -71,44 +77,18 @@ morning-briefing/
         ├── QuranVerse.tsx        # arabic (rtl) + english translation
         └── Focus.tsx             # the daily sentence
 ```
-
 ---
-
-## briefing json schema
-
-what gpt produces and the frontend consumes:
-
-```json
-{
-  "date": "Thursday, March 26",
-  "greeting": "Good morning.",
-  "prayer_times": { "fajr": "5:32 AM", "dhuhr": "...", "asr": "...", "maghrib": "...", "isha": "..." },
-  "quran": { "arabic": "...", "translation": "...", "surah_name": "Al-Fatihah", "ayah_number": 5, "surah_number": 1 },
-  "weather": {
-    "summary": "High of 14°C with rain after 3 PM — wrap up outdoor plans by 2.",
-    "daily": { "temp_max_c": 14.2, "temp_min_c": 6.1, "wind_speed_max_kmh": 28.0 },
-    "hourly": [{ "time": "9:00 AM", "temp_c": 11.0, "precip_probability": 10 }]
-  },
-  "calendar": {
-    "has_events": true,
-    "events": [{ "title": "Team standup", "start_time": "...", "prep_nudge": "anything blocking?" }]
-  },
-  "news": [{ "title": "...", "source": "Reuters", "url": "...", "summary": "One punchy sentence." }],
-  "tasks": {
-    "all_tasks": [{ "title": "...", "priority": 3, "project_name": "Work" }],
-    "focus_task": { "title": "...", "priority": 3, "project_name": "Work" },
-    "focus_reason": "Highest priority with a hard morning deadline."
-  },
-  "focus": "The hour before lunch decides the afternoon."
-}
-```
+## future features i can think of
+- day score (workload, deadline, weather, workouts)
+- garmin connect integration (plan day according to sleep amount, fatigue, etc.)
+- night section (reflections, summary, habit tracking, next day preview)
 
 ---
 
 ## a few things worth knowing
 
-- **no caching, ever.** r2 file is `no-cache, no-store` and the next.js api route uses `cache: "no-store"`. always fresh.
-- **fetcher failures don't crash the run.** if ticktick or news api is down, the rest still goes. gpt gets `null` for that section and handles it fine.
-- **the gpt prompt is pretty opinionated.** weather summaries reference actual hours and temps. prep nudges are short fragments ("confirm the link", not a whole sentence). the focus quote is grounded — no linkedin energy allowed.
-- **quran verse is the same all day.** `random.seed(today's date)` means it won't change on refresh. one verse, all day.
-- **cors is handled server-side.** the next.js api route proxies the r2 fetch so the browser never makes a cross-origin request. no r2 cors config needed.
+- no caching. ever. always fresh.
+- if something breaks (news, ticktick), the rest still works.
+- gpt is opinionated on purpose (short nudges, no fluff, no linkedin quotes).
+- quran verse is stable for the day (seeded randomness).
+- cors handled server-side so frontend stays clean.
