@@ -1,5 +1,13 @@
 # morning-briefing ☀️
+# morning-briefing ☀️
 
+my personal morning dashboard, built so i don't have to think before coffee. every day it pulls my calendar, to-do list, weather, news, prayer times, and a quran verse — throws it all at GPT-4o Mini — and spits out one clean JSON file. 
+
+i didn’t want 5 apps in the morning.  
+i wanted one screen that tells me everything i need.
+i hope to extend this project into a second brain.
+
+feel free to play around with the demo. :)
 my personal morning dashboard, built so i don't have to think before coffee. every day it pulls my calendar, to-do list, weather, news, prayer times, and a quran verse — throws it all at GPT-4o Mini — and spits out one clean JSON file. 
 
 i didn’t want 5 apps in the morning.  
