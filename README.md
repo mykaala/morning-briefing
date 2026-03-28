@@ -1,20 +1,27 @@
-# morning-briefing
+# morning-briefing ☀️
 
-my personal morning dashboard, built so i don't have to think before coffee. every day it pulls my calendar, to-do list, weather, news, prayer times, and a quran verse — throws it all at GPT-4o Mini — and spits out one clean JSON file. open a tab, get your day. that's it.
+my personal morning dashboard, built so i don't have to think before coffee. every day it pulls my calendar, to-do list, weather, news, prayer times, and a quran verse — throws it all at GPT-4o Mini — and spits out one clean JSON file. 
+
+i didn’t want 5 apps in the morning.  
+i wanted one screen that tells me everything i need.
+i hope to extend this project into a second brain.
+
+feel free to play around with the demo. :)
 
 ---
 
 ## what it does
 
-six fetchers run in parallel on a google cloud function every morning:
+seven fetchers run in parallel on a google cloud function every morning:
 
 ```
 Open-Meteo ─-─┐
 NewsAPI ──────┤
-Google Cal ───┤──► GPT-4o Mini ──► Cloudflare R2 ──► Next.js dashboard
-TickTick ─────┤
+Google Cal ───┤
+TickTick ─────┤──► GPT-4o Mini ──► Cloudflare R2 ──► Next.js dashboard
 Aladhan ──────┤
-alquran.cloud ┘
+alquran.cloud ─┤
+Garmin ────────┘
 ```
 
 gpt synthesizes everything into structured JSON, uploads it to R2 as `briefing.json`, and the frontend just fetches that. no database. no auth layer. one file, rebuilt daily. it's kind of beautiful in how simple it is.
@@ -31,7 +38,7 @@ gpt synthesizes everything into structured JSON, uploads it to R2 as `briefing.j
 | frontend | next.js 14 + react + tailwind + typescript |
 | deploy | gcf + vercel |
 
-**apis:** open-meteo (free 🙌), news api, google calendar v3, ticktick open api, aladhan, alquran.cloud
+**apis:** open-meteo (free 🙌), news api, google calendar v3, ticktick open api, aladhan, alquran.cloud, garmin connect
 
 ---
 
@@ -53,7 +60,8 @@ morning-briefing/
 │       ├── calendar_gcal.py      # 📅 google calendar via oauth2 refresh token
 │       ├── ticktick.py           # ✅ today's tasks via ticktick open api
 │       ├── prayer.py             # 🕌 prayer times via aladhan
-│       └── quran.py              # 📖 daily verse 
+│       ├── quran.py              # 📖 daily verse
+│       └── garmin.py             # 💚 yesterday's health data via garmin connect
 │
 └── frontend/
     ├── .env.local                # NEXT_PUBLIC_R2_URL
@@ -69,10 +77,11 @@ morning-briefing/
         ├── Tasks.tsx             # focus task + everything else by project
         ├── News.tsx              # headlines with one-line summaries
         ├── QuranVerse.tsx        # arabic (rtl) + english translation
-        └── Focus.tsx             # the daily sentence
+        ├── Focus.tsx             # the daily sentence
+        └── Garmin.tsx            # recovery card — 4 animated rings
 ```
-
 ---
+<<<<<<< HEAD
 
 ## briefing json schema
 
@@ -99,16 +108,41 @@ what gpt produces and the frontend consumes:
     "focus_task": { "title": "...", "priority": 3, "project_name": "Work" },
     "focus_reason": "Highest priority with a hard morning deadline."
   },
-  "focus": "The hour before lunch decides the afternoon."
+  "focus": "The hour before lunch decides the afternoon.",
+  "garmin": {
+    "body_battery_end": 72,
+    "sleep_hours": 7.2,
+    "sleep_score": 78,
+    "stress_avg": 28,
+    "steps": 8432,
+    "summary": "Well-rested and low stress — good day to push."
+  }
 }
 ```
+=======
+## future features i can think of
+- day score (workload, deadline, weather, workouts)
+- garmin connect integration (plan day according to sleep amount, fatigue, etc.)
+- night section (reflections, summary, habit tracking, next day preview)
+>>>>>>> 9bcdd8d996a376166656a87e1016cb8132d92ad6
 
 ---
 
 ## a few things worth knowing
 
+<<<<<<< HEAD
 - **no caching, ever.** r2 file is `no-cache, no-store` and the next.js api route uses `cache: "no-store"`. always fresh.
 - **fetcher failures don't crash the run.** if ticktick or news api is down, the rest still goes. gpt gets `null` for that section and handles it fine.
 - **the gpt prompt is pretty opinionated.** weather summaries reference actual hours and temps. prep nudges are short fragments ("confirm the link", not a whole sentence). the focus quote is grounded — no linkedin energy allowed.
 - **quran verse is the same all day.** `random.seed(today's date)` means it won't change on refresh. one verse, all day.
 - **cors is handled server-side.** the next.js api route proxies the r2 fetch so the browser never makes a cross-origin request. no r2 cors config needed.
+- **garmin tokens are cached.** `garminconnect` uses garth under the hood. tokens are dumped to `/tmp/garth_tokens` after the first full login and reused on subsequent runs — avoids garmin's rate limits. full re-auth only happens when tokens expire (~60 days).
+- **garmin shapes the gpt output qualitatively.** body battery and sleep inform the greeting tone and focus sentence, but gpt never quotes raw numbers. it expresses energy in feel ("slept well", "running low") not data.
+- **garmin section is skipped if unavailable.** if the fetcher fails or credentials aren't set, the recovery card simply doesn't render. everything else continues normally.
+=======
+- no caching. ever. always fresh.
+- if something breaks (news, ticktick), the rest still works.
+- gpt is opinionated on purpose (short nudges, no fluff, no linkedin quotes).
+- quran verse is stable for the day (seeded randomness).
+- cors handled server-side so frontend stays clean.
+>>>>>>> 9bcdd8d996a376166656a87e1016cb8132d92ad6

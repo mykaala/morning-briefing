@@ -5,8 +5,8 @@ import LandingPage from "@/components/LandingPage";
 /* ─── Demo data ──────────────────────────────────────────── */
 
 const DEMO_BRIEFING: Briefing = {
-  date: "Monday, March 30",
-  greeting: "You've got a product review at 2pm — solid morning to prep.",
+  date: "Saturday, March 28",
+  greeting: "Slept well and the day is yours — light schedule, good energy, no excuses.",
   prayer_times: [
     { name: "Dhuhr", time: "12:54", context: "after standup" },
     { name: "Asr",   time: "16:22", context: "before review" },
@@ -100,7 +100,15 @@ const DEMO_BRIEFING: Briefing = {
     focus_reason:
       "Product review is at 2pm — having the roadmap doc done before then sets you up well.",
   },
-  focus: "The prep you do this morning will speak for you this afternoon.",
+  focus: "Battery's solid and the day is open — use the morning before it fills up.",
+  garmin: {
+    body_battery_end: 72,
+    sleep_hours: 7.2,
+    sleep_score: 78,
+    stress_avg: 28,
+    steps: 8432,
+    summary: "Well-rested and low stress — good day to push.",
+  },
 };
 
 /* ─── Page (server component) ────────────────────────────── */

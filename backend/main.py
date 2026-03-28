@@ -13,6 +13,7 @@ from fetchers.news import get_news_headlines
 from fetchers.quran import get_quran_verse
 from fetchers.calendar_gcal import get_google_calendar_events
 from fetchers.ticktick import get_ticktick_tasks
+from fetchers.garmin import get_garmin_data
 from gpt import build_briefing
 from uploader import upload_briefing
 
@@ -26,12 +27,13 @@ FETCHERS = {
     "tasks":    get_ticktick_tasks,
     "prayer":   get_prayer_times,
     "quran":    get_quran_verse,
+    "garmin":   get_garmin_data,
 }
 
 
 def _run_fetchers():
     results = {}
-    with ThreadPoolExecutor(max_workers=6) as executor:
+    with ThreadPoolExecutor(max_workers=7) as executor:
         future_to_name = {executor.submit(fn): name for name, fn in FETCHERS.items()}
         for future in as_completed(future_to_name):
             name = future_to_name[future]
@@ -58,6 +60,7 @@ def run(request):
             tasks=results["tasks"],
             prayer=results["prayer"],
             quran=results["quran"],
+            garmin=results["garmin"],
         )
 
         # GPT outputs weather.summary only — merge raw daily/hourly back in

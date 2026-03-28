@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useSpring, useTransform } from "motion/react";
 import QuranVerse from "@/components/QuranVerse";
+import Garmin, { type GarminData } from "@/components/Garmin";
 import Weather from "@/components/Weather";
 import Calendar from "@/components/Calendar";
 import News from "@/components/News";
@@ -77,6 +78,7 @@ export interface Briefing {
     focus_reason: string;
   };
   focus: string;
+  garmin?: GarminData | null;
 }
 
 /* ─── Daily accent colour ────────────────────────────────── */
@@ -93,7 +95,7 @@ function getAccent(): string {
   return ACCENT_PALETTE[dayOfYear % 3];
 }
 
-/* ─── Weekly gradient variants ───────────────────────────── */
+/* ─── Daily gradient variants ────────────────────────────── */
 
 const GRADIENT_VARIANTS = [
   // 0 · warm — peach + violet + pink
@@ -139,20 +141,17 @@ const GRADIENT_VARIANTS = [
    #6aad7a`,
 ];
 
-function getWeeklyGradientIndex(): number {
+function getDailyGradientIndex(): number {
   const now = new Date(
     new Date().toLocaleString("en-US", { timeZone: "America/New_York" })
   );
   const startOfYear = new Date(now.getFullYear(), 0, 1);
-  const weekNum = Math.floor(
-    (now.getTime() - startOfYear.getTime()) / (7 * 86_400_000)
+  const dayNum = Math.floor(
+    (now.getTime() - startOfYear.getTime()) / 86_400_000
   );
-  return weekNum % GRADIENT_VARIANTS.length;
+  return dayNum % GRADIENT_VARIANTS.length;
 }
 
-/* ─── Shared ease ────────────────────────────────────────── */
-
-const ease: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 /* ─── Scroll progress bar ────────────────────────────────── */
 
@@ -332,7 +331,7 @@ function LockWidget({ isDemo }: { isDemo: boolean }) {
   const [submitting, setSubmitting] = useState(false);
   const [shakeKey, setShakeKey] = useState(0);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setSubmitting(true);
     setErrorMsg("");
@@ -553,12 +552,13 @@ interface Props {
   isDemo: boolean;
   error: string | null;
   onBack?: () => void;
+  heroSection?: React.ReactNode;
 }
 
-export default function Dashboard({ briefing, isDemo, error, onBack }: Props) {
+export default function Dashboard({ briefing, isDemo, error, onBack, heroSection }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [gradientIndex, setGradientIndex] = useState(
-    () => (isDemo ? 0 : getWeeklyGradientIndex())
+    () => (isDemo ? 0 : getDailyGradientIndex())
   );
 
   useEffect(() => {
@@ -713,6 +713,15 @@ export default function Dashboard({ briefing, isDemo, error, onBack }: Props) {
           background: "transparent",
         }}
       >
+        {/* ─── 0. HERO (optional, e.g. landing page) ── */}
+        {heroSection && (
+          <ParallaxSection
+            containerRef={containerRef as React.RefObject<HTMLDivElement>}
+          >
+            {heroSection}
+          </ParallaxSection>
+        )}
+
         {/* ─── 1. HEADER ──────────────────────────── */}
         <ParallaxSection
           containerRef={containerRef as React.RefObject<HTMLDivElement>}
@@ -777,18 +786,28 @@ export default function Dashboard({ briefing, isDemo, error, onBack }: Props) {
           />
         </ParallaxSection>
 
-        {/* ─── 3. WEATHER ─────────────────────────── */}
+        {/* ─── 3. GARMIN RECOVERY ─────────────────── */}
+        {briefing.garmin && (
+          <ParallaxSection
+            containerRef={containerRef as React.RefObject<HTMLDivElement>}
+            ghost="02"
+          >
+            <Garmin garmin={briefing.garmin} />
+          </ParallaxSection>
+        )}
+
+        {/* ─── 4. WEATHER ─────────────────────────── */}
         <ParallaxSection
           containerRef={containerRef as React.RefObject<HTMLDivElement>}
-          ghost="02"
+          ghost="03"
         >
           <Weather weather={briefing.weather} Card={Card} Eyebrow={Eyebrow} />
         </ParallaxSection>
 
-        {/* ─── 4. SCHEDULE (calendar + prayers) ───── */}
+        {/* ─── 5. SCHEDULE (calendar + prayers) ───── */}
         <ParallaxSection
           containerRef={containerRef as React.RefObject<HTMLDivElement>}
-          ghost="03"
+          ghost="04"
         >
           <Calendar
             calendar={briefing.calendar}
@@ -799,10 +818,10 @@ export default function Dashboard({ briefing, isDemo, error, onBack }: Props) {
           />
         </ParallaxSection>
 
-        {/* ─── 5. NEWS ────────────────────────────── */}
+        {/* ─── 6. NEWS ────────────────────────────── */}
         <ParallaxSection
           containerRef={containerRef as React.RefObject<HTMLDivElement>}
-          ghost="04"
+          ghost="05"
         >
           <News
             news={briefing.news}
@@ -812,10 +831,10 @@ export default function Dashboard({ briefing, isDemo, error, onBack }: Props) {
           />
         </ParallaxSection>
 
-        {/* ─── 6. FOCUS + TASKS ───────────────────── */}
+        {/* ─── 7. FOCUS + TASKS ───────────────────── */}
         <ParallaxSection
           containerRef={containerRef as React.RefObject<HTMLDivElement>}
-          ghost="05"
+          ghost="06"
         >
           <div
             className="two-col-grid"
@@ -845,6 +864,9 @@ export default function Dashboard({ briefing, isDemo, error, onBack }: Props) {
         @media (max-width: 767px) {
           .two-col-grid {
             grid-template-columns: 1fr !important;
+          }
+          .garmin-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
           }
         }
       `}</style>

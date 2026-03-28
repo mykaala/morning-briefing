@@ -29,7 +29,14 @@ load_dotenv()
 #     "focus_task": { "title": "...", "priority": 3, "project_name": "..." } or null,
 #     "focus_reason": "One sentence — never null, even if no tasks."
 #   },
-#   "focus": "One grounded, specific sentence for the day."
+#   "focus": "One grounded, specific sentence for the day.",
+#   "garmin": {
+#     "body_battery_end": number or null,
+#     "sleep_hours": number or null,
+#     "sleep_score": number or null,
+#     "stress_avg": number or null,
+#     "steps": number or null
+#   }
 # }
 
 SYSTEM_PROMPT = """You are a personal morning briefing assistant. Your job is to synthesize raw data into a structured, actionable daily briefing.
@@ -87,12 +94,20 @@ Return ONLY valid JSON — no markdown, no code fences, no explanation. The JSON
     "focus_task": { "title": "string", "priority": integer, "project_name": "string" } or null,
     "focus_reason": "string (never null — see rule 6)"
   },
-  "focus": "string (one grounded sentence — see rule 7)"
+  "focus": "string (one grounded sentence — see rule 7)",
+  "garmin": {
+    "body_battery_end": number or null,
+    "sleep_hours": number or null,
+    "sleep_score": number or null,
+    "stress_avg": number or null,
+    "steps": number or null,
+    "summary": "string — one casual qualitative sentence, no numbers (see rule 10)"
+  }
 }
 
 Rules — follow these exactly:
 
-1. Greeting: make it specific to the day's content AND vary the structure each time. Some days lead with the weather, some days lead with a task or event, some days lead with the overall shape of the day. Use different sentence rhythms — sometimes punchy ("Rain before noon. Get the hard thing done first."), sometimes warm ("Clear skies and a light schedule — good day to breathe."), sometimes direct ("ISA at 5 — everything before that is yours."). Never write something generic like "Let's make today count" or "Hope you have a great day." Never repeat the same sentence structure as these examples.
+1. Greeting: 1–2 sentences, casual and human — like a friend who knows your day and how you slept. Let Garmin data shape the TONE (rested vs drained, high-energy vs recovery) and let calendar/tasks shape the CONTENT — but never quote any numbers, stats, or metrics. No body battery values, no sleep hours, no step counts, no stress scores. Express energy in feel: "slept well", "rough night", "running low", "good energy". Vary structure — sometimes lead with energy state, sometimes with the day's shape, sometimes with a specific event. Never generic ("Let's make today count"). Examples of the right register: "Slept well, light morning ahead — good day to get ahead of things." / "Rough night but ISA at 5 is the one thing that matters." / "Good energy and a clear schedule — no excuses today."
 
 2. Prayer times: arrange Dhuhr, Asr, Maghrib, Isha as a timeline relative to calendar events. For context, use a short phrase that places the prayer relative to the schedule — e.g. "after standup", "between class and ISA", "after maghrib window", "evening wind-down". Keep context to 2–4 words. If no events nearby, use a time-of-day anchor like "midday", "afternoon", "sunset", "night".
 
@@ -108,10 +123,17 @@ Rules — follow these exactly:
 
 8. News: return exactly 2 items. Summaries are punchy headline-digest style — one sentence, no fluff.
 
-9. Keep all raw data intact: don't alter quran text or news URLs."""
+9. Keep all raw data intact: don't alter quran text or news URLs.
+
+10. Garmin data (if present): use it to personalise the briefing.
+    - Greeting: let energy state shape tone — see rule 1 for the no-numbers constraint.
+    - Focus: factor in energy. Low battery or poor sleep → protect the morning. High battery → push.
+    - Add a recovery note in focus if body_battery_end < 40 OR sleep_hours < 6.
+    - garmin.summary: one casual qualitative sentence on overall recovery. No numbers, no metrics. E.g. "Well-rested and low stress — good day to push." / "Short night, take it easy this morning." / "Decent sleep but stress ran high yesterday — keep the morning light."
+    - Echo all numeric values back exactly as received."""
 
 
-def build_briefing(weather, calendar, news, tasks, prayer, quran):
+def build_briefing(weather, calendar, news, tasks, prayer, quran, garmin=None):
     """Build a morning briefing by calling GPT-4o mini with all fetcher data."""
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
@@ -138,7 +160,8 @@ def build_briefing(weather, calendar, news, tasks, prayer, quran):
         "weather": weather,
         "calendar_events": calendar,
         "news_headlines": news,
-        "tasks": tasks
+        "tasks": tasks,
+        "garmin": garmin if garmin is not None else "unavailable"
     }, ensure_ascii=False, indent=2)
 
     response = client.chat.completions.create(
