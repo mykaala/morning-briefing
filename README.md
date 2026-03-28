@@ -5,6 +5,7 @@ i wanted one screen that tells me everything i need.
 i hope to extend this project into a second brain.
 
 feel free to play around with the demo. :)
+visit at https://morning.mykaala.com/
 
 ---
 
