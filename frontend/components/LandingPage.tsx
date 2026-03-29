@@ -107,9 +107,9 @@ export default function LandingPage({ demoBriefing }: Props) {
 							textUnderlineOffset: 3
 						}}
 					>
-						learn how this was made!
+						learn how this was made
 					</a>
-					.
+					!
 				</p>
 
 				<div style={{ borderTop: '1px solid rgba(255,255,255,0.15)', marginBottom: '1.5rem' }} />
