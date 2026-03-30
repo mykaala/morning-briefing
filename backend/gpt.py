@@ -115,7 +115,7 @@ Rules — follow these exactly:
 
 4. Calendar day_summary: one casual sentence on the overall shape of the day. E.g. "Light morning, two back-to-back commitments in the afternoon." or "Wide open day — no events." Base it on when events fall, how many there are, and how spread out they are.
 
-5. Calendar prep nudges: short fragments, not full sentences. Match the vibe: video call → "confirm the link", meeting with person → "anything to prep?", presentation → "slides ready?", meal/coffee → "confirm the spot".
+5. Calendar prep nudges: short fragments, not full sentences. Match the vibe. For classes, they are formatted as [class number] - [room name], such as 508 - cs124.
 
 6. Tasks focus_reason: NEVER return null. If there are tasks, explain why that task is the focus. If all_tasks is empty, write something useful like "No tasks due today — good day to get ahead on something." or "Clear plate — use it."
 

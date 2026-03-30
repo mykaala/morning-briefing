@@ -302,6 +302,88 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 
 const NoGhost = () => null;
 
+/* ─── Refresh button ─────────────────────────────────────── */
+
+function RefreshButton() {
+  const [state, setState] = useState<"idle" | "loading" | "error">("idle");
+
+  async function handleRefresh() {
+    if (state === "loading") return;
+    setState("loading");
+    try {
+      const res = await fetch("/api/refresh");
+      if (res.ok) {
+        window.location.reload();
+      } else {
+        setState("error");
+        setTimeout(() => setState("idle"), 2000);
+      }
+    } catch {
+      setState("error");
+      setTimeout(() => setState("idle"), 2000);
+    }
+  }
+
+  const label = state === "error" ? "failed" : "refresh";
+
+  return (
+    <button
+      onClick={handleRefresh}
+      aria-label="refresh briefing"
+      style={{
+        position: "fixed",
+        bottom: "1.5rem",
+        right: "8rem",
+        zIndex: 200,
+        height: 36,
+        borderRadius: "1rem",
+        border: "1px solid rgba(255,255,255,0.35)",
+        background: state === "loading" ? "rgba(255,255,255,0.28)" : "rgba(255,255,255,0.18)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        cursor: state === "loading" ? "default" : "pointer",
+        color: state === "error" ? "rgba(255,120,120,0.9)" : "#ffffff",
+        fontFamily: "var(--font-inter)",
+        fontSize: 12,
+        fontWeight: 500,
+        letterSpacing: "0.03em",
+        textTransform: "lowercase",
+        display: "flex",
+        alignItems: "center",
+        padding: "0 0.75rem",
+        transition: "background 0.3s, opacity 0.2s, color 0.2s",
+        overflow: "hidden",
+      }}
+    >
+      {state === "loading" ? (
+        <span style={{ display: "flex", gap: 3, alignItems: "center" }}>
+          {[0, 1, 2].map((i) => (
+            <span
+              key={i}
+              style={{
+                width: 4,
+                height: 4,
+                borderRadius: "50%",
+                background: "#ffffff",
+                display: "inline-block",
+                animation: `claudeDot 1.2s ease-in-out ${i * 0.2}s infinite`,
+              }}
+            />
+          ))}
+        </span>
+      ) : (
+        label
+      )}
+      <style>{`
+        @keyframes claudeDot {
+          0%, 60%, 100% { opacity: 0.25; transform: scale(0.8); }
+          30% { opacity: 1; transform: scale(1); }
+        }
+      `}</style>
+    </button>
+  );
+}
+
 /* ─── Lock icon SVG ──────────────────────────────────────── */
 
 function LockIcon() {
@@ -371,13 +453,15 @@ function LockWidget({ isDemo }: { isDemo: boolean }) {
           bottom: "1.5rem",
           right: "5rem",
           zIndex: 200,
-          width: 32,
-          height: 32,
-          background: "none",
-          border: "none",
+          width: 36,
+          height: 36,
+          borderRadius: "50%",
+          border: "1px solid rgba(255,255,255,0.35)",
+          background: "rgba(255,255,255,0.18)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
           cursor: "pointer",
           color: "#ffffff",
-          opacity: 0.4,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -699,6 +783,9 @@ export default function Dashboard({ briefing, isDemo, error, onBack, heroSection
       >
         ›
       </button>
+
+      {/* ── Refresh button (real mode only) ── */}
+      {!isDemo && <RefreshButton />}
 
       {/* ── Lock widget ── */}
       <LockWidget isDemo={isDemo} />
