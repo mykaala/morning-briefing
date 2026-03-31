@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def upload_briefing(briefing_dict):
+def upload_briefing(briefing_dict, filename: str = "briefing.json"):
     """Upload briefing JSON to Cloudflare R2."""
     account_id = os.getenv("CF_R2_ACCOUNT_ID")
     access_key = os.getenv("CF_R2_ACCESS_KEY")
@@ -33,17 +33,22 @@ def upload_briefing(briefing_dict):
 
     s3_client.put_object(
         Bucket=bucket_name,
-        Key="briefing.json",
+        Key=filename,
         Body=briefing_json,
         ContentType="application/json",
         CacheControl="no-cache, no-store, must-revalidate"
     )
 
     # CF_R2_PUBLIC_URL is the intentionally public read URL for the R2 bucket (no auth required).
-    public_url = f"{os.getenv('CF_R2_PUBLIC_URL')}/briefing.json"
-    print(f"Briefing uploaded to {public_url}")
+    public_url = f"{os.getenv('CF_R2_PUBLIC_URL')}/{filename}"
+    print(f"Uploaded to {public_url}")
 
     return public_url
+
+
+def upload_night_briefing(briefing_dict):
+    """Upload night briefing JSON to Cloudflare R2 as night_briefing.json."""
+    return upload_briefing(briefing_dict, filename="night_briefing.json")
 
 
 if __name__ == "__main__":

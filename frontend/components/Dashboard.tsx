@@ -186,10 +186,12 @@ function ParallaxSection({
   children,
   containerRef,
   ghost,
+  onLeaveView,
 }: {
   children: React.ReactNode;
   containerRef: React.RefObject<HTMLDivElement>;
   ghost?: string;
+  onLeaveView?: () => void;
 }) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
@@ -197,6 +199,16 @@ function ParallaxSection({
     container: containerRef,
     offset: ["start end", "end start"],
   });
+
+  useEffect(() => {
+    if (!onLeaveView || !sectionRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (!entry.isIntersecting) onLeaveView(); },
+      { threshold: 0.1 }
+    );
+    observer.observe(sectionRef.current);
+    return () => observer.disconnect();
+  }, [onLeaveView]);
   const y = useTransform(scrollYProgress, [0, 1], [35, -35]);
   const ghostY = useTransform(scrollYProgress, [0, 1], [70, -70]);
 
@@ -637,9 +649,10 @@ interface Props {
   error: string | null;
   onBack?: () => void;
   heroSection?: React.ReactNode;
+  onHeroHide?: () => void;
 }
 
-export default function Dashboard({ briefing, isDemo, error, onBack, heroSection }: Props) {
+export default function Dashboard({ briefing, isDemo, error, onBack, heroSection, onHeroHide }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [gradientIndex, setGradientIndex] = useState(
     () => (isDemo ? 0 : getDailyGradientIndex())
@@ -804,6 +817,7 @@ export default function Dashboard({ briefing, isDemo, error, onBack, heroSection
         {heroSection && (
           <ParallaxSection
             containerRef={containerRef as React.RefObject<HTMLDivElement>}
+            onLeaveView={onHeroHide}
           >
             {heroSection}
           </ParallaxSection>

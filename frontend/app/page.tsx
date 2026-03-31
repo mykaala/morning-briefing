@@ -1,6 +1,8 @@
 import { headers } from 'next/headers';
-import Dashboard, { type Briefing } from '@/components/Dashboard';
+import { type Briefing } from '@/components/Dashboard';
+import { type NightBriefing } from '@/components/NightDashboard';
 import LandingPage from '@/components/LandingPage';
+import TabSwitcher from '@/components/TabSwitcher';
 
 /* ─── Demo data ──────────────────────────────────────────── */
 
@@ -264,27 +266,34 @@ export default async function Home() {
 	const headersList = await headers();
 	const isDemo = headersList.get('x-demo-mode') === 'true';
 
-	let briefing: Briefing | null = null;
-	let fetchError: string | null = null;
-
 	if (isDemo) {
-		// No valid cookie — show landing page with demo option
 		return <LandingPage demoBriefing={DEMO_BRIEFING} />;
 	}
 
-	const url = process.env.R2_URL;
-	if (!url) {
-		fetchError = 'R2_URL is not configured';
-	} else {
-		try {
-			const res = await fetch(url, { cache: 'no-store' });
-			if (!res.ok) throw new Error(`HTTP ${res.status}`);
-			briefing = (await res.json()) as Briefing;
-		} catch (e) {
-			fetchError = e instanceof Error ? e.message : 'unknown error';
-		}
+	async function fetchJSON<T>(url: string | undefined, label: string): Promise<T> {
+		if (!url) throw new Error(`${label} is not configured`);
+		const res = await fetch(url, { cache: 'no-store' });
+		if (!res.ok) throw new Error(`HTTP ${res.status}`);
+		return res.json() as Promise<T>;
 	}
 
-	return <Dashboard briefing={briefing} isDemo={false} error={fetchError} />;
+	const [morningResult, nightResult] = await Promise.allSettled([
+		fetchJSON<Briefing>(process.env.R2_URL, 'R2_URL'),
+		fetchJSON<NightBriefing>(process.env.R2_URL_NIGHT, 'R2_URL_NIGHT'),
+	]);
+
+	const morningBriefing = morningResult.status === 'fulfilled' ? morningResult.value : null;
+	const morningError = morningResult.status === 'rejected'
+		? ((morningResult.reason as Error)?.message ?? 'unknown error')
+		: null;
+	const nightBriefing = nightResult.status === 'fulfilled' ? nightResult.value : null;
+
+	return (
+		<TabSwitcher
+			morningBriefing={morningBriefing}
+			morningError={morningError}
+			nightBriefing={nightBriefing}
+		/>
+	);
 }
 // deploy

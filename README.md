@@ -1,29 +1,59 @@
-# ☀️ Morning Briefing ☕️
+# ☀️ morning briefing
 
-i didn’t want to check 7 apps in the morning.  
-i wanted one screen that tells me everything i need.
-i hope to extend this project into a second brain.
+i didn't want to check 7 apps every morning.
+i wanted one screen that tells me everything.
 
-feel free to play around with the demo. :)
-visit at https://morning.mykaala.com/
+so i built it.
+
+live at **[morning.mykaala.com](https://morning.mykaala.com)** — feel free to poke around the demo. :)
 
 ---
 
 ## what it does
 
-seven fetchers run in parallel on a google cloud function every morning:
+two pipelines run on a schedule. one in the morning, one at night.
+
+**morning** — seven fetchers hit their APIs in parallel, GPT synthesizes everything into structured JSON, that JSON gets uploaded to Cloudflare R2, and the Next.js frontend fetches it. no database. no auth layer. one file, rebuilt daily. it's kind of beautiful in how simple it is.
+
+**night** — same idea. fetches today's calendar (for reflection context) + tomorrow's calendar, weather, and tasks. GPT closes out the day and sets up tomorrow. uploads to a second R2 file at 9pm ET.
 
 ```
+morning pipeline:
 Open-Meteo ─-─┐
 NewsAPI ──────┤
 Google Cal ───┤
-TickTick ─────┤──► GPT-4o Mini ──► Cloudflare R2 ──► Next.js dashboard
+TickTick ─────┤──► GPT-4o Mini ──► Cloudflare R2 ──► Next.js
 Aladhan ──────┤
 alquran.cloud ─┤
 Garmin ────────┘
+
+night pipeline:
+Google Cal (today) ──┐
+Google Cal (tmrw) ───┤
+Open-Meteo (tmrw) ───┤──► GPT-4o Mini ──► Cloudflare R2 ──► Next.js
+TickTick (tmrw) ─────┤
+Garmin (today) ───────┘
 ```
 
-gpt synthesizes everything into structured JSON, uploads it to R2 as `briefing.json`, and the frontend just fetches that. no database. no auth layer. one file, rebuilt daily. it's kind of beautiful in how simple it is.
+---
+
+## what you actually see
+
+**morning tab** ☀️
+- gpt-written focus sentence for the day
+- weather — summary + scrollable hourly + daily forecast
+- calendar events with AI-generated prep nudges
+- today's tasks, grouped by project
+- prayer times (next one highlighted)
+- daily quran verse in arabic + english
+- garmin recovery data — steps, sleep, body battery, stress
+
+**night tab** 🌙 — unlocks at 9pm ET
+- warm closing line for the day (references something specific from your calendar)
+- 2-3 sentence reflection on the shape of your day
+- one honest reflection prompt to sit with before sleep
+- tomorrow's weather, events, tasks, and a one-line preview
+- habit tracker — salah, workout, deep work, steps
 
 ---
 
@@ -33,11 +63,11 @@ gpt synthesizes everything into structured JSON, uploads it to R2 as `briefing.j
 |---|---|
 | backend | google cloud functions (python) |
 | ai | openai gpt-4o mini |
-| storage | cloudflare r2 |
-| frontend | next.js 14 + react + tailwind + typescript |
-| deploy | gcf + vercel |
+| storage | cloudflare r2 (static JSON, no db) |
+| frontend | next.js 16 + typescript + framer motion |
+| deploy | cloud scheduler → gcf + vercel |
 
-**apis:** open-meteo (free 🙌), news api, google calendar v3, ticktick open api, aladhan, alquran.cloud, garmin connect
+**apis:** open-meteo (free 🙌), newsapi, google calendar v3, ticktick open api, aladhan, alquran.cloud, garmin connect
 
 ---
 
@@ -45,52 +75,54 @@ gpt synthesizes everything into structured JSON, uploads it to R2 as `briefing.j
 
 ```
 morning-briefing/
-├── .env.local                    # secrets (backend, local only)
+├── .env.local                       # secrets (not committed)
 │
 ├── backend/
-│   ├── main.py                   # ☁️ gcf entry point: run(request)
-│   ├── gpt.py                    # 🤖 build_briefing() — the whole prompt thing
-│   ├── uploader.py               # 📤 upload_briefing() — boto3 → r2
-│   ├── test_pipeline.py          # 🧪 run everything locally end-to-end
+│   ├── main.py                      # ☁️ gcf entry — handles ?mode=morning|night
+│   ├── gpt.py                       # 🤖 morning briefing prompt + json schema
+│   ├── night_gpt.py                 # 🌙 night briefing prompt + json schema
+│   ├── uploader.py                  # 📤 boto3 → cloudflare r2
 │   ├── requirements.txt
 │   └── fetchers/
-│       ├── weather.py            # 🌤️  open-meteo hourly + daily (celsius)
-│       ├── news.py               # 📰 top 5 us headlines
-│       ├── calendar_gcal.py      # 📅 google calendar via oauth2 refresh token
-│       ├── ticktick.py           # ✅ today's tasks via ticktick open api
-│       ├── prayer.py             # 🕌 prayer times via aladhan
-│       ├── quran.py              # 📖 daily verse
-│       └── garmin.py             # 💚 yesterday's health data via garmin connect
+│       ├── weather.py               # 🌤️  open-meteo hourly + daily + tomorrow
+│       ├── news.py                  # 📰 top 5 us headlines via newsapi
+│       ├── calendar_gcal.py         # 📅 google calendar (oauth2 refresh token)
+│       ├── night_calendar.py        # 📅 tomorrow's calendar events
+│       ├── ticktick.py              # ✅ today's + tomorrow's tasks
+│       ├── prayer.py                # 🕌 prayer times via aladhan
+│       ├── quran.py                 # 📖 daily quran verse (seeded)
+│       └── garmin.py                # 💚 steps, sleep, body battery, stress
 │
 └── frontend/
-    ├── .env.local                # NEXT_PUBLIC_R2_URL
     ├── app/
-    │   ├── page.tsx              # 🏠 main dashboard (skeleton → data)
+    │   ├── page.tsx                 # server component — fetches both briefings in parallel
     │   ├── layout.tsx
-    │   └── api/briefing/
-    │       └── route.ts          # 🔁 r2 proxy (handles cors)
+    │   └── api/
+    │       ├── auth/route.ts        # cookie-based access control
+    │       └── refresh/route.ts     # proxies trigger to cloud function
     └── components/
-        ├── PrayerTimes.tsx       # highlights next upcoming prayer
-        ├── Weather.tsx           # gpt summary + scrollable hourly
-        ├── Calendar.tsx          # events + gpt-generated prep nudges
-        ├── Tasks.tsx             # focus task + everything else by project
-        ├── News.tsx              # headlines with one-line summaries
-        ├── QuranVerse.tsx        # arabic (rtl) + english translation
-        ├── Focus.tsx             # the daily sentence
-        └── Garmin.tsx            # recovery card — 4 animated rings
+        ├── TabSwitcher.tsx          # sun/moon tab bar, night locks til 9pm ET
+        ├── Dashboard.tsx            # morning layout + refresh button
+        ├── NightDashboard.tsx       # night layout + habit tracker wrapper
+        ├── NightHabits.tsx          # interactive habit checkboxes (animated)
+        ├── LandingPage.tsx          # demo mode hero + password form
+        ├── Weather.tsx              # gpt summary + scrollable hourly
+        ├── Calendar.tsx             # events with prep nudges
+        ├── Tasks.tsx                # focus task + grouped task list
+        ├── News.tsx                 # headlines + one-liners
+        ├── QuranVerse.tsx           # arabic (rtl) + english translation
+        ├── PrayerTimes.tsx          # next prayer highlighted
+        ├── Focus.tsx                # the daily sentence
+        └── Garmin.tsx               # recovery card — 4 animated rings
 ```
----
-
-## future features i can think of
-- day score (workload, deadline, weather, workouts)
-- garmin connect integration (plan day according to sleep amount, fatigue, etc.)
-- night section (reflections, summary, habit tracking, next day preview)
 
 ---
 
 ## a few things worth knowing
 
-- if something breaks (news, ticktick), the rest still works.
-- gpt is opinionated on purpose (short nudges, no fluff, no linkedin quotes).
-- quran verse is stable for the day (seeded randomness).
-- cors handled server-side so frontend stays clean.
+- if a fetcher fails (news api, ticktick, garmin), the rest of the pipeline still runs — nothing hard-crashes
+- gpt is opinionated on purpose: short nudges, no fluff, no linkedin-style motivational quotes
+- the night GPT gets today's calendar for reflection context AND tomorrow's calendar for the preview section — they're fetched separately so it doesn't confuse what's happened vs. what's coming
+- quran verse is stable for the day (seeded by date so it doesn't change on refresh)
+- cors handled server-side so the frontend stays clean
+- the whole thing is personal — it's designed around one person's actual life (mine)

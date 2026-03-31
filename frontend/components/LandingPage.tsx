@@ -2,11 +2,47 @@
 
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import Dashboard, { type Briefing } from '@/components/Dashboard';
+import { type Briefing } from '@/components/Dashboard';
+import { type NightBriefing } from '@/components/NightDashboard';
+import TabSwitcher from '@/components/TabSwitcher';
 
 interface Props {
 	demoBriefing: Briefing;
 }
+
+const DEMO_NIGHT_BRIEFING: NightBriefing = {
+	date: 'Sunday, March 29',
+	closing: 'decent day — got the important stuff done and still made it to the gym.',
+	day_summary:
+		'morning was mostly focused work, afternoon had a couple of commitments that broke up the flow but nothing unmanageable. ended on a good note.',
+	reflection_prompt: "what's one thing you kept telling yourself you'd do later that's still sitting there?",
+	tomorrow: {
+		weather_summary:
+			'cold 3°C morning, bundle up. clears up by afternoon — should be fine for walking between buildings.',
+		events: [
+			{
+				title: 'CS 485 — LGRT 220',
+				start_time: '2026-03-30T10:00:00-04:00',
+				end_time: '2026-03-30T11:15:00-04:00',
+				is_all_day: false,
+				prep_nudge: 'skim the readings'
+			},
+			{
+				title: 'Research sync',
+				start_time: '2026-03-30T14:00:00-04:00',
+				end_time: '2026-03-30T15:00:00-04:00',
+				is_all_day: false,
+				prep_nudge: 'review latest results'
+			}
+		],
+		tasks_due: ['push eval script fixes', 'reply to professor email'],
+		preview: 'light morning before it picks up — use the time before class.'
+	},
+	habits: {
+		steps_goal_met: true,
+		steps: 9240
+	}
+};
 
 export default function LandingPage({ demoBriefing }: Props) {
 	const [password, setPassword] = useState('');
@@ -213,5 +249,13 @@ export default function LandingPage({ demoBriefing }: Props) {
 		</motion.div>
 	);
 
-	return <Dashboard briefing={demoBriefing} isDemo={true} error={null} heroSection={heroSection} />;
+	return (
+		<TabSwitcher
+			morningBriefing={demoBriefing}
+			morningError={null}
+			nightBriefing={DEMO_NIGHT_BRIEFING}
+			isDemo={true}
+			heroSection={heroSection}
+		/>
+	);
 }

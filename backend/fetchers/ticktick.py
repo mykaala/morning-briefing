@@ -94,6 +94,55 @@ def get_ticktick_tasks():
     return tasks
 
 
+def get_tasks_due_tomorrow():
+    """Fetch TickTick tasks due tomorrow from the inbox."""
+    access_token = os.getenv("TICKTICK_ACCESS_TOKEN")
+    if not access_token:
+        raise ValueError("TICKTICK_ACCESS_TOKEN environment variable is required")
+
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json",
+    }
+
+    resp = requests.get(
+        f"{BASE_URL}/project/{INBOX_ID}/data",
+        headers=headers,
+        timeout=10,
+    )
+
+    if resp.status_code == 401:
+        raise ValueError(
+            "TickTick access token expired. Re-run the OAuth script to get a new one."
+        )
+
+    resp.raise_for_status()
+    data = resp.json()
+
+    raw_tasks = data.get("tasks", []) if isinstance(data, dict) else data
+
+    today_utc = datetime.now(timezone.utc).date()
+    tomorrow_utc = today_utc + timedelta(days=1)
+
+    pool = []
+    for task in raw_tasks:
+        if task.get("status") != 0:
+            continue
+        due_raw = task.get("dueDate") or ""
+        if not due_raw:
+            continue
+        try:
+            d = datetime.fromisoformat(due_raw.replace("+0000", "+00:00")).date()
+        except ValueError:
+            continue
+        if d == tomorrow_utc:
+            pool.append(task)
+
+    pool.sort(key=lambda t: (-t.get("priority", 0), (t.get("dueDate") or "")[:10]))
+
+    return [t.get("title", "") for t in pool]
+
+
 if __name__ == "__main__":
     result = get_ticktick_tasks()
     if not result:
