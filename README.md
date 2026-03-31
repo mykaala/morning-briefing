@@ -24,15 +24,15 @@ NewsAPI ──────┤
 Google Cal ───┤
 TickTick ─────┤──► GPT-4o Mini ──► Cloudflare R2 ──► Next.js
 Aladhan ──────┤
-alquran.cloud ─┤
-Garmin ────────┘
+alquran.cloud ┤
+Garmin ───────┘
 
 night pipeline:
-Google Cal (today) ──┐
-Google Cal (tmrw) ───┤
-Open-Meteo (tmrw) ───┤──► GPT-4o Mini ──► Cloudflare R2 ──► Next.js
-TickTick (tmrw) ─────┤
-Garmin (today) ───────┘
+Google Cal (tdy) -──┐
+Google Cal (tmr) ───┤
+Open-Meteo (tmr) ───┤──► GPT-4o Mini ──► Cloudflare R2 ──► Next.js
+TickTick (tmrw) ────┤
+Garmin (today) ─────┘
 ```
 
 ---
